@@ -1,7 +1,6 @@
 package com.rest.send.controller;
 
 import com.rest.send.domain.FileContentDto;
-import com.rest.send.mapper.FileMapper;
 import com.rest.send.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -23,8 +22,6 @@ import java.util.List;
 public class FileController {
     @Autowired
     FileService service;
-    @Autowired
-    FileMapper mapper;
 
     @GetMapping(value = "/download/{name}")
     ResponseEntity<Resource> download(@PathVariable String name) throws FileNotFoundException, MalformedURLException {
@@ -39,14 +36,14 @@ public class FileController {
                 .body(resource);
     }
 
-    @PostMapping(value = "uploadFile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    FileContentDto uploadFile(@RequestParam(value = "name") String name, @RequestParam(value = "file") MultipartFile file) throws FileNotSavedException {
+    @PostMapping(value = "upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    FileContentDto upload(@RequestParam(value = "name") String name, @RequestParam(value = "file") MultipartFile file) throws FileNotSavedException {
 
         try {
-            service.saveFile(mapper.mapToFile(name, file));
+            service.saveFile(name, file);
             return new FileContentDto("File saved successfully.", file.getOriginalFilename(), file.getContentType(), file.getSize());
         } catch (IOException ex) {
-            throw new FileNotSavedException("File not saved. Error: ");
+            throw new FileNotSavedException("File not saved. Error: " + ex.getMessage());
         }
     }
 
@@ -56,10 +53,10 @@ public class FileController {
 
         for (MultipartFile file : files) {
             try {
-                service.saveFile(mapper.mapToFile(file.getOriginalFilename(), file));
+                service.saveFile(file.getOriginalFilename(), file);
                 result.add(new FileContentDto("File saved successfully.", file.getOriginalFilename(), file.getContentType(), file.getSize()));
             } catch (IOException ex) {
-                throw new FileNotSavedException("File not saved. Error: ");
+                throw new FileNotSavedException("File not saved. Error: " + ex.getMessage());
             }
         }
 
